@@ -1,0 +1,44 @@
+import { chromium } from 'playwright';
+import { readFile, mkdir, writeFile } from 'node:fs/promises';
+import { resolve } from 'node:path';
+import assert from 'node:assert/strict';
+const browser = await chromium.launch({ headless: true, ...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE } : {}) });
+const page = await browser.newPage({ viewport: { width: 1440, height: 960 } });
+const errors = []; page.on('pageerror', error => errors.push(error.message));
+try {
+  const theme = await readFile('tests/fixtures/theme.css', 'utf8');
+  await page.setContent(`<html data-platform="darwin"><head><style>${theme}</style><style>body{margin:0;background:var(--dsw-alias-bg-base);color:var(--dsw-alias-label-primary);font:14px system-ui}#conversation{position:absolute;left:240px;top:48px;right:0;height:900px;background:var(--dsw-alias-bg-base)}#heading{height:48px;border-bottom:1px solid var(--dsw-alias-border-l1);display:flex;align-items:center;justify-content:space-between;padding:0 20px}#sidebar{position:absolute;top:48px;right:0;bottom:0;width:0;background:var(--dsw-alias-bg-layer-2)}.sample-chat{padding:40px 80px;max-width:700px;line-height:1.8}</style></head><body data-ds-dark-theme><div id="conversation" data-phase="active"><div id="heading">项目会话<div data-conversation-header-corner></div></div><div class="sample-chat"><h2>DSH 对话区域</h2><p>布局与主题预览 · 所有仓库、分支与 PR 均为示例数据。</p><p>打开右侧工具栏时，概要保持在对话区域内，不占用整列。</p></div></div><div id="sidebar"></div><div id="plugin"></div></body></html>`);
+  await page.addScriptTag({ path: resolve('node_modules/react/umd/react.production.min.js') });
+  await page.addScriptTag({ path: resolve('node_modules/react-dom/umd/react-dom.production.min.js') });
+  await page.evaluate(() => {
+    const summary = { kind: 'repo', name: 'demo-web-app', branch: 'feat/project-summary', ahead: 1, behind: 0, additions: 42, deletions: 8, untracked: 1, binary: 0, files: [{ path: 'src/locales/zh-CN.json', status: ' M' }, { path: 'notes.txt', status: '??' }], commits: [{ hash: 'a1b2c3d', subject: 'feat: add compact project summary', author: 'demo-user', time: '2026-01-15T10:00:00Z' }, { hash: 'e4f5a6b', subject: 'fix: follow conversation panel bounds', author: 'demo-user', time: '2026-01-14T10:00:00Z' }], pr: { number: 42, title: 'feat: add floating project summary', url: 'https://github.com/example/repo/pull/42', state: 'OPEN', baseRefName: 'main' }, updatedAt: new Date('2026-01-15T10:00:00Z').getTime() };
+    const api = { summary: async () => ({ ok: true, value: summary }), diff: async () => ({ ok: true, value: { text: 'diff --git a/src/locales/zh-CN.json b/src/locales/zh-CN.json\n@@ -1 +1 @@\n-重试结算\n+重试扣款\n', truncated: false } }) };
+    window.__ModuleLoader__ = { load({ factory }) { const plugin = factory(id => { if (id === 'react') return window.React; if (id === 'react/jsx-runtime') return { jsx: (type, props, key) => window.React.createElement(type, { ...props, key }), jsxs: (type, props, key) => window.React.createElement(type, { ...props, key }), Fragment: window.React.Fragment }; throw Error(id); });
+      plugin.apply({ get: () => api, remote: { $mount: async () => async () => {} }, effect: fn => fn(), slots: { inject: (_name, fn) => fn(), register: (_options, Component) => { window.ReactDOM.createRoot(document.getElementById('plugin')).render(window.React.createElement(Component, { usePanelInfo: sel => sel({ activePanelId: null }), useSessions: sel => sel({ byId: { test: { id: 'test', retainedBy: { mainView: 1 } } } }) })); return () => {}; } } });
+    } };
+  });
+  await page.addScriptTag({ path: resolve('client/client.js') });
+  await page.getByText('最近提交', { exact: true }).waitFor();
+  const dark = await page.locator('.dps-card').evaluate(el => { const s = getComputedStyle(el); return { background: s.backgroundColor, text: s.color }; });
+  assert.equal(dark.background, 'rgb(35, 35, 36)');
+  assert.notEqual(dark.background, 'rgba(0, 0, 0, 0)');
+  let card = await page.locator('.dps-card').boundingBox(); assert.equal(card.x + card.width, 1424); assert.equal(card.width, 296);
+  await mkdir('verification', { recursive: true });
+  await page.screenshot({ path: 'verification/dark-example.png' });
+  await page.evaluate(() => { document.getElementById('conversation').style.right = '400px'; document.getElementById('sidebar').style.width = '400px'; document.getElementById('sidebar').textContent = '右侧工具栏'; });
+  await page.waitForFunction(() => document.querySelector('.dps-card').getBoundingClientRect().right <= document.getElementById('conversation').getBoundingClientRect().right);
+  card = await page.locator('.dps-card').boundingBox(); assert.equal(card.x + card.width, 1024);
+  await page.screenshot({ path: 'verification/dark-sidebar-example.png' });
+  await page.evaluate(() => document.body.removeAttribute('data-ds-dark-theme'));
+  const light = await page.locator('.dps-card').evaluate(el => { const s = getComputedStyle(el); return { background: s.backgroundColor, text: s.color }; });
+  assert.notEqual(light.background, dark.background); assert.notEqual(light.text, dark.text); assert.equal(light.background, 'rgb(255, 255, 255)');
+  await page.screenshot({ path: 'verification/light-sidebar-example.png' });
+  await page.locator('.dps-change-button').click(); await page.getByText('+重试扣款', { exact: true }).waitFor();
+  assert.equal(await page.locator('dialog[open]').count(), 1); await page.keyboard.press('Escape'); assert.equal(await page.locator('dialog[open]').count(), 0);
+  await page.getByRole('button', { name: '收起项目概要', exact: true }).last().click();
+  await page.waitForFunction(() => document.querySelector('.dps-card').getBoundingClientRect().width === 186);
+  card = await page.locator('.dps-card').boundingBox(); assert.equal(card.x + card.width, 1024);
+  assert.deepEqual(errors, []);
+  const result = { dark, light, card, errors, checks: ['inherited dark palette', 'inherited light palette switches live', 'card stays inside conversation with sidebar open', 'collapsed card stays anchored', 'diff preview and Escape', 'no browser errors'] };
+  await writeFile('verification/ui-result.json', JSON.stringify(result, null, 2)); console.log(JSON.stringify(result, null, 2));
+} finally { await browser.close(); }

@@ -1,0 +1,28 @@
+/* Minimal synthetic palette for component tests, not a vendored DSH stylesheet.
+   Production always inherits the real client's theme variables. */
+body {
+  --dsw-alias-bg-base: #fff;
+  --dsw-alias-bg-layer-1: #fff;
+  --dsw-alias-bg-layer-2: #f5f5f5;
+  --dsw-alias-border-l1: #e5e5e5;
+  --dsw-alias-border-l2: #d4d4d4;
+  --dsw-alias-label-primary: #0f1115;
+  --dsw-alias-label-secondary: #65676b;
+  --dsw-alias-brand-primary: #4176e6;
+  --dsw-alias-state-success-primary: #168a42;
+  --dsw-alias-state-error-primary: #d93838;
+  --dsw-alias-state-warn-primary: #956100;
+}
+body[data-ds-dark-theme] {
+  --dsw-alias-bg-base: #141414;
+  --dsw-alias-bg-layer-1: #232324;
+  --dsw-alias-bg-layer-2: #292929;
+  --dsw-alias-border-l1: #343434;
+  --dsw-alias-border-l2: #454545;
+  --dsw-alias-label-primary: #f9fafb;
+  --dsw-alias-label-secondary: #adb2b8;
+  --dsw-alias-brand-primary: #7aaaff;
+  --dsw-alias-state-success-primary: #4ed17e;
+  --dsw-alias-state-error-primary: #f87171;
+  --dsw-alias-state-warn-primary: #f7ad31;
+}

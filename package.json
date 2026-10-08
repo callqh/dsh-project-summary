@@ -1,0 +1,47 @@
+{
+  "name": "dsh-project-summary",
+  "version": "0.1.1",
+  "description": "A compact floating Git project summary for DeepSeek Harness: branch, changes, commits and GitHub pull requests.",
+  "type": "module",
+  "main": "lib/index.js",
+  "exports": {
+    ".": "./lib/index.js",
+    "./client": "./client/client.js",
+    "./package.json": "./package.json"
+  },
+  "files": ["lib", "client", "cordis.patch.yml", "README.md", "README.en.md", "LICENSE", "SECURITY.md", "CHANGELOG.md"],
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "build": "tsc -p tsconfig.json && node scripts/build-client.mjs",
+    "test": "node --test tests/*.test.mjs",
+    "test:ui": "node scripts/verify-ui.mjs",
+    "check:package": "node scripts/check-package.mjs",
+    "check": "npm run typecheck && npm run build && npm test && npm run check:package"
+  },
+  "dependencies": {
+    "@deepseek-ai/cordis": "^4.0.4",
+    "@deepseek-ai/dsh-typert-protocol": "0.2.0-rc.2"
+  },
+  "peerDependencies": { "@deepseek-ai/dsh": "0.2.0-rc.2" },
+  "peerDependenciesMeta": { "@deepseek-ai/dsh": { "optional": true } },
+  "dsh": {
+    "bundle": { "patch": "./cordis.patch.yml" },
+    "client": { "platform": "web", "inject": ["@deepseek-ai/dsh-client-ui-layout"] }
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3",
+    "rolldown": "^1.2.11",
+    "react": "~18.3.1",
+    "react-dom": "~18.3.1",
+    "@types/react": "~18.3.1",
+    "@types/node": "^24.10.1",
+    "playwright": "^1.63.0"
+  },
+  "engines": { "node": ">=22.18.0" },
+  "keywords": ["dsh", "dsh-plugin", "deepseek", "harness", "git", "github", "pull-request", "project-summary"],
+  "author": "callqh",
+  "license": "MIT",
+  "repository": { "type": "git", "url": "git+https://github.com/callqh/dsh-project-summary.git" },
+  "homepage": "https://github.com/callqh/dsh-project-summary#readme",
+  "bugs": { "url": "https://github.com/callqh/dsh-project-summary/issues" }
+}
