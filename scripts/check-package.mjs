@@ -20,6 +20,9 @@ for (const name of names) {
   assert.ok(!/(?:\/Users\/|\/Applications\/|\/home\/[\w.-]+\/)/.test(text), `Local path in ${name}`);
   assert.ok(!/(?:gh[pousr]_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{30,}|sk-[A-Za-z0-9]{20,})/.test(text), `Potential credential in ${name}`);
 }
+for (const field of ['dependencies', 'optionalDependencies', 'peerDependencies']) {
+  assert.deepEqual(Object.keys(meta[field] ?? {}), [], `${field} must not install or version-gate host services`);
+}
 const client = await readFile('client/client.js', 'utf8');
 assert.match(client, /^window\.__ModuleLoader__\.load\(\{\s*id:\s*"dsh-project-summary"/, 'Missing DSH module-loader envelope');
 console.log(`Package checks passed: ${meta.name}@${meta.version}, ${names.length} files, no install scripts, no detected credentials or workstation paths.`);
