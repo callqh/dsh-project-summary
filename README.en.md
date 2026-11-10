@@ -10,7 +10,7 @@
 
 A third-party, read-only DSH plugin. The compact card floats at the **top-right of the active conversation pane**, rather than consuming an entire right-hand column. It follows the conversation as the sidebar opens, closes or resizes, and inherits the client's light/dark theme colors.
 
-> Initial compatibility target: **DSH `0.2.0-rc.2`**. Runtime integration was developed on macOS Desktop; other DSH versions and Windows are not verified. Development tests can run on Linux CI. This project is not affiliated with DeepSeek or OpenAI. UI labels are currently Chinese.
+> Initial compatibility target: **DSH `0.2.0-rc.2`**. Runtime integration was developed on macOS Desktop; source version `0.1.2` also passes disposable Web-profile startup and summary/diff RPC checks on DSH `0.2.2-rc.1`. Windows is not verified. Development tests can run on Linux CI. This project is not affiliated with DeepSeek or OpenAI. UI labels are currently Chinese.
 
 ## Preview
 
@@ -32,6 +32,8 @@ A third-party, read-only DSH plugin. The compact card floats at the **top-right 
 - Graceful states for non-repositories, missing GitHub CLI, inaccessible repositories and failed queries.
 
 ## Install
+
+> Source version `0.1.2` has not been released yet. It removes the old exact DSH version gate and uses host services without installing private DSH dependencies. Run `npm pack --ignore-scripts` to create a local archive. The Release links below still refer to published `0.1.1`; use the fixed local archive for DSH `0.2.2-rc.1`.
 
 ### 1. Get the prebuilt bundle
 
